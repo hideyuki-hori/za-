@@ -5,15 +5,22 @@ mod types;
 use types::Noise;
 
 fn main() {
-    let stream =
-        OutputStreamBuilder::open_default_stream().expect("Could not open default audio stream");
+    let stream = OutputStreamBuilder::open_default_stream().unwrap_or_else(|e| {
+        println!("Could not open audio stream: {}", e);
+        std::process::exit(1);
+    });
     let sink = Sink::connect_new(stream.mixer());
 
-    println!("1 - white");
-    println!("2 - pink");
-    println!("3 - brown");
-    println!("s - stop");
-    println!("q - quit");
+    println!("1 - White");
+    println!("2 - Pink");
+    println!("3 - Brown");
+    println!("q - Quit");
+
+    let play = |noise: Noise| {
+        println!("{}", noise.state);
+        sink.stop();
+        sink.append(noise);
+    };
 
     loop {
         let mut input = String::new();
@@ -28,30 +35,11 @@ fn main() {
         let command = input.trim();
 
         match command {
-            "1" => {
-                println!("white");
-                sink.clear();
-                sink.append(Noise::white());
-            }
-            "2" => {
-                println!("pink");
-                sink.clear();
-                sink.append(Noise::pink());
-            }
-            "3" => {
-                println!("brown");
-                sink.clear();
-                sink.append(Noise::brown());
-            }
-            "s" => {
-                sink.stop();
-            }
-            "q" => {
-                break;
-            }
-            _ => {
-                println!("???");
-            }
+            "1" => play(Noise::white()),
+            "2" => play(Noise::pink()),
+            "3" => play(Noise::brown()),
+            "q" => break,
+            _ => println!("???"),
         }
     }
 
